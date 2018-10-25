@@ -78,4 +78,67 @@ object SkiChallenge {
     val slopes = this.getSlopes(resort, i, j)
     !slopes.exists(_ < 0) && slopes.exists(_ > 0)
   }
+
+  /**
+    *
+    * @param resort Resort elevation map as a List of Lists of Int
+    * @param rows Total number of rows in the elevation map
+    * @param columns Total number of columns in the elevation map
+    * @return
+    */
+  def getLocalMaxima(resort: List[List[Int]], rows: Int, columns: Int): List[(Int, Int)] = {
+
+    def getLocalMaxima(resort: List[List[Int]], iStart: Int, iEnd: Int, jStart: Int, jEnd: Int): List[(Int, Int)] = {
+
+      // Split into quadrants
+      if(iEnd-iStart >= 4 && jEnd-jStart >= 4) {
+
+        val iMidEnd = ((iEnd+iStart)/2.0).floor.toInt
+        val jMidEnd = ((jEnd+jStart)/2.0).floor.toInt
+
+        List((iStart, iMidEnd, jStart, jMidEnd),
+             (iStart, iMidEnd, jMidEnd, jEnd),
+             (iMidEnd, iEnd, jStart, jMidEnd),
+             (iMidEnd, iEnd, jMidEnd, jEnd))
+          .par
+          .map{case (i0, i1, j0, j1) => getLocalMaxima(resort, i0, i1, j0, j1)}
+          .reduce(_ ::: _)
+
+      // Split row dimension in half
+      }else if(iEnd-iStart >= 4){
+
+        val iMidEnd = ((iEnd+iStart)/2.0).floor.toInt
+
+        List((iStart, iMidEnd, jStart, jEnd), (iMidEnd, iEnd, jStart, jEnd))
+          .par
+          .map{case (i0, i1, j0, j1) => getLocalMaxima(resort, i0, i1, j0, j1)}
+          .reduce(_ ::: _)
+
+      // Split column dimension in half
+      }else if(jEnd-jStart >= 4){
+
+        val jMidEnd = ((jEnd+jStart)/2.0).floor.toInt
+
+        List((iStart, iEnd, jStart, jMidEnd), (iStart, iEnd, jMidEnd, jEnd))
+          .par
+          .map{case (i0, i1, j0, j1) => getLocalMaxima(resort, i0, i1, j0, j1)}
+          .reduce(_ ::: _)
+
+      // Base case, compute sequentially all local maxima of the current slice
+      }else{
+
+        // Precompute indices
+        val indices = for {
+          i <- iStart until iEnd
+          j <- jStart until jEnd
+        } yield (i, j)
+
+        // Return indices that contain a local maximum
+        indices.filter{case (i,j) => isLocalMaximum(resort, i, j)}.toList
+      }
+    }
+
+    getLocalMaxima(resort, 0, rows, 0, columns)
+  }
+
 }

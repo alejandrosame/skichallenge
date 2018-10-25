@@ -110,6 +110,53 @@ class SkiChallengeTest extends FunSuite with BeforeAndAfter {
 
   }
 
+  test("5 - Find local maxima") {
+
+    val resort = List(List(4,8,7,3),
+                      List(2,5,9,3),
+                      List(6,3,2,5),
+                      List(4,4,1,6))
+
+    val resortMaxima = List((0,1), (1,2), (2,0), (3,1), (3,3))
+
+    assert(SkiChallenge.getLocalMaxima(resort, 4, 4) === resortMaxima)
+
+
+    val resort2 = List(List(8,8,8,8),
+                       List(8,8,8,8),
+                       List(8,8,5,8),
+                       List(8,8,8,8))
+
+    val resort2Maxima = List((1,2), (2,1), (2,3), (3,2))
+
+    assert(SkiChallenge.getLocalMaxima(resort2, 4, 4) === resort2Maxima)
+
+
+    val resort3 = List(List(8,8,8,8),
+                       List(8,8,8,8),
+                       List(8,8,8,8),
+                       List(8,8,8,8))
+
+    val resort3Maxima = List()
+
+    assert(SkiChallenge.getLocalMaxima(resort3, 4, 4) === resort3Maxima)
+
+    // Some more especial cases
+    assert(SkiChallenge.getLocalMaxima(List(), 0, 0) === List())
+
+    assert(SkiChallenge.getLocalMaxima(List(List(2)), 1, 1) === List())
+
+    assert(SkiChallenge.getLocalMaxima(List(List(2,1), List(1,1)), 2, 2) === List((0,0)))
+
+    assert(SkiChallenge.getLocalMaxima(List(List(1,2,1), List(1,1,1)), 2, 3) === List((0,1)))
+
+    assert(SkiChallenge.getLocalMaxima(List(List(1,1,1),
+                                            List(1,2,1),
+                                            List(1,1,1)), 3, 3) === List((1,1)))
+
+
+  }
+
 }
 
 
