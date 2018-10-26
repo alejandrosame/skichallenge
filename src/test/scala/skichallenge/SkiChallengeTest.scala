@@ -157,6 +157,80 @@ class SkiChallengeTest extends FunSuite with BeforeAndAfter {
 
   }
 
+  test("6 - Find downwards directions") {
+
+    assert(SkiChallenge.downwardDirections(List(List(1,1,1),
+                                                List(1,5,1),
+                                                List(1,1,1)), 1, 1) === List((1,0), (2,1), (1,2), (0,1)))
+
+    assert(SkiChallenge.downwardDirections(List(List(1,5,1),
+                                                List(1,5,5),
+                                                List(1,5,1)), 1, 1) === List((1,0)))
+
+    assert(SkiChallenge.downwardDirections(List(List(1,5,1),
+                                                List(5,5,5),
+                                                List(1,1,1)), 1, 1) === List((2,1)))
+
+    assert(SkiChallenge.downwardDirections(List(List(1,5,1),
+                                                List(5,5,1),
+                                                List(1,5,1)), 1, 1) === List((1,2)))
+
+    assert(SkiChallenge.downwardDirections(List(List(1,1,1),
+                                                List(9,5,9),
+                                                List(1,9,1)), 1, 1) === List((0,1)))
+
+    assert(SkiChallenge.downwardDirections(List(List(1,1,1),
+                                                List(1,1,1),
+                                                List(1,1,1)), 1, 1) === List())
+  }
+
+  test("7 - Get longest path from specific starting point") {
+
+    val resort = List(List(4, 8, 7, 3),
+                      List(2, 5, 9, 3),
+                      List(6, 3, 2, 5),
+                      List(4, 4, 1, 6))
+
+    val pointPaths = List( ((0,0), ResortPath(2, 2, List((0,0), (1,0)), List(4,2))),
+                           ((0,3), ResortPath(1, 0, List((0,3)), List(3))),
+                           ((3,0), ResortPath(1, 0, List((3,0)), List(4))),
+                           ((3,3), ResortPath(4, 5, List((3,3), (2,3), (2,2), (3,2)), List(6,5,2,1))),
+                           ((2,0), ResortPath(4, 5, List((2,0), (2,1), (2,2), (3,2)), List(6,3,2,1))))
+
+    for( ((i,j), path) <- pointPaths ){
+      assert(SkiChallenge.longestPathFromPoint(resort, i, j) === path)
+    }
+
+  }
+
+  test("8 - Find longest path in the resort map") {
+
+    // Only one best candidate
+    val resort = List(List(4, 8, 7, 3),
+                      List(2, 5, 9, 3),
+                      List(6, 3, 2, 5),
+                      List(4, 4, 1, 6))
+
+    val pathCandidates = Set(ResortPath(5, 8, List((1, 2), (1, 1), (2, 1), (2, 2), (3, 2)),
+                                        List(9, 5, 3, 2, 1)))
+
+    assert(pathCandidates.exists(path => SkiChallenge.getLongestPath(resort, 4, 4) === path))
+
+    // Two paths with same length and same drop, the algorithm should return one of them
+    val resort2 = List(List(4, 9, 7, 3),
+                       List(2, 5, 9, 3),
+                       List(6, 3, 2, 5),
+                       List(4, 4, 1, 6))
+
+    val pathCandidates2 = Set(ResortPath(5, 8, List((1, 2), (1, 1), (2, 1), (2, 2), (3, 2)),
+                                         List(9, 5, 3, 2, 1)),
+                              ResortPath(5, 8, List((0, 1), (1, 1), (2, 1), (2, 2), (3, 2)),
+                                         List(9, 5, 3, 2, 1)))
+
+    assert(pathCandidates2.exists(path => SkiChallenge.getLongestPath(resort2, 4, 4) === path))
+
+  }
+
 }
 
 

@@ -2,6 +2,8 @@ package skichallenge
 
 import scala.io.Source
 
+case class ResortPath(length: Int, drop: Int, path: List[(Int, Int)], pathValues: List[Int])
+
 object SkiChallenge {
 
   /**
@@ -40,7 +42,7 @@ object SkiChallenge {
     * @param j1 Column of the starting map point
     * @param i2 Row of the ending map point
     * @param j2 Column of the ending map point
-    * @return Return 1 when going down the slope, 0 when on a plane (including out of bounds) and -1 when going up
+    * @return Return 1 when going down the slope, 0 when on a plateau (including out of bounds) and -1 when going up
     */
   def slope(resort: List[List[Int]], i1: Int, j1: Int, i2: Int, j2: Int): Int = {
 
@@ -84,7 +86,7 @@ object SkiChallenge {
     * @param resort Resort elevation map as a List of Lists of Int
     * @param rows Total number of rows in the elevation map
     * @param columns Total number of columns in the elevation map
-    * @return
+    * @return List of indices where a local maximum is located
     */
   def getLocalMaxima(resort: List[List[Int]], rows: Int, columns: Int): List[(Int, Int)] = {
 
@@ -139,6 +141,86 @@ object SkiChallenge {
     }
 
     getLocalMaxima(resort, 0, rows, 0, columns)
+  }
+
+  /**
+    *
+    * @param resort Resort elevation map as a List of Lists of Int
+    * @param i Current row position
+    * @param j Current column position
+    * @return List of positions where the current point can keep moving downwards
+    */
+  def downwardDirections(resort: List[List[Int]], i: Int, j: Int): List[(Int, Int)] = {
+
+    val directions = List((i,   j-1), // West
+                          (i+1, j),   // South
+                          (i,   j+1), // East
+                          (i-1, j))   // North
+
+    // We return the directions in which the slope is positive (lower value than current position)
+    directions.filter{case (x:Int, y:Int) => slope(resort, i, j, x, y) > 0}
+
+  }
+
+  /**
+    *
+    * @param a Path to compare if its a better path
+    * @param b Path to compare if its a better path
+    * @return Path A if it's longer or equal than B. If there is a tie, choose the one with higher drop
+    */
+  def betterPath(a: ResortPath, b: ResortPath): ResortPath = {
+    if (a.length >= b.length) a
+    else if (a.length == b.length && a.drop >= b.drop) a
+    else b
+  }
+
+
+  /**
+    *
+    * @param resort Resort elevation map as a List of Lists of Int
+    * @param i Starting row of the path to be computed
+    * @param j Starting column of the path to be computed
+    * @return Longest path starting in the input coordinates
+    */
+  def longestPathFromPoint(resort: List[List[Int]], i: Int, j: Int): ResortPath = {
+
+    def buildPaths(resort: List[List[Int]], i: Int, j: Int): List[ResortPath] = {
+
+      (resort(i)(j), downwardDirections(resort, i, j)) match {
+        case (currentValue, List()) => List(ResortPath(1, 0, List((i, j)), List(currentValue)))
+        case (currentValue, directions) => {
+          directions.par
+                    .map{case (x:Int, y:Int) => buildPaths(resort, x, y)}
+                    .reduce(_ ::: _)
+                    // Prepend the current position to the computed paths and return the new paths
+                    .map(path => ResortPath(path.length+1, currentValue - path.pathValues.last,
+                                            (i, j) :: path.path, currentValue :: path.pathValues))
+        }
+      }
+    }
+
+    val paths = buildPaths(resort, i, j)
+
+    paths.reduceLeft(betterPath)
+
+  }
+
+  /**
+    *
+    * @param resort Resort elevation map as a List of Lists of Int
+    * @param rows  Total number of rows in the elevation map
+    * @param columns Total number of columns in the elevation map
+    * @return Longest path in the resort map
+    */
+  def getLongestPath(resort: List[List[Int]], rows: Int, columns: Int): ResortPath = {
+
+    val maxima = getLocalMaxima(resort, rows, columns)
+
+    maxima.par
+          .map{case (i, j) => longestPathFromPoint(resort, i, j)}
+          .foldLeft(List[ResortPath]()){ (list, path) => path :: list } // Make list of best paths from each maximum
+          .reduceLeft(betterPath)                                       // Take the best path from all top candidates
+
   }
 
 }
