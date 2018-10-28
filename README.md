@@ -89,4 +89,4 @@ it usually executes in <120s.
 
 ## Implementation documentation
 
-To read further about the implementation and its improvement points, read [here](src/main/scala/skichallenge/README).
+To read further about the implementation and its improvement points, read [here](src/main/scala/skichallenge).
